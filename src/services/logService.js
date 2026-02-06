@@ -41,11 +41,31 @@ class LogService {
   }
 
   logError(error, context = {}) {
-    this.log('error', error.message || 'An error occurred', {
-      ...context,
-      error: error.toString(),
-      stack: error.stack
-    })
+    let message = 'An unknown error occurred';
+    const data = { ...context };
+
+    if (error instanceof Error) {
+      message = error.message;
+      data.stack = error.stack;
+      data.error = error.toString();
+    } else if (typeof error === 'string') {
+      message = error;
+      data.error = error;
+    } else if (error && typeof error === 'object') {
+      // Common for API error responses
+      message = error.detail || error.message || 'An object-based error occurred';
+      try {
+        data.error = JSON.stringify(error);
+      } catch (e) {
+        data.error = '[object Object] (Could not be stringified)';
+      }
+    } else if (error) {
+      // Handle other primitives that might be thrown
+      message = String(error);
+      data.error = error;
+    }
+
+    this.log('error', message, data);
   }
 
   logButtonClick(buttonLabel, functional = true) {
