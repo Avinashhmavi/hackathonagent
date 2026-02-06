@@ -8,10 +8,16 @@ services:
     container_name: api-service
     ports:
       - "8001:8001"
-    restart: unless-stopped
+    # Add resource limits to address high memory usage and prevent instability.
+    mem_limit: 1g
+    mem_reservation: 512m
+    cpus: 0.5
+    restart: on-failure
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/docs"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      # Increased start_period to give the service more time to become healthy,
+      # addressing potential slow startups that cause premature 'unhealthy' states.
+      start_period: 60s
